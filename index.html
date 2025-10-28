@@ -1,0 +1,2363 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jetour - Inteligencia de Negocios - Bolivia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha512-sA+e2tF8lj0J1xH7gDdBrYqKqRR3YKHyCuXapnwYfJOLLmObAun1vDLteA94ppIqhzyapMI2bA38nSxr2idKQw==" crossorigin="">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha512-GxDkQ71R+xVQ1BM8DT6vKrrfE0Yv7FpC18JNpDutZCRa14Q6gttxyPjdvVSxGInxjeRGna43EIBgzHuLlHotwA==" crossorigin=""></script>
+    <style>
+        :root {
+            color-scheme: only light;
+            --bg: linear-gradient(180deg, #f9fafb 0%, #eef1f5 100%);
+            --panel: #ffffff;
+            --panel-2: #f4f6fa;
+            --panel-soft: rgba(255, 255, 255, 0.65);
+            --border: #d8dee6;
+            --text: #1d242e;
+            --muted: #546175;
+            --brand: #274c77;
+            --accent: #4c6793;
+            --kpi-up: #1b7f5a;
+            --kpi-down: #c0392b;
+            --radius: 18px;
+            --gap: 18px;
+            --shadow: 0 18px 36px rgba(24, 36, 56, 0.12);
+            --shadow-hover: 0 24px 44px rgba(24, 36, 56, 0.15);
+            --shadow-header: 0 16px 28px rgba(24, 36, 56, 0.1);
+            --speed: 200ms;
+            --bezier: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        main {
+            padding-bottom: 56px;
+        }
+
+        .container {
+            width: min(92%, 1200px);
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(14px);
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(216, 222, 230, 0.7);
+            box-shadow: var(--shadow-header);
+            transition: transform var(--speed) var(--bezier);
+        }
+
+        header.is-hidden {
+            transform: translateY(-110%);
+        }
+
+        header .container {
+            padding: 10px 0;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            width: clamp(150px, 18vw, 220px);
+            height: auto;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 16px;
+            padding: 0;
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 0.015em;
+        }
+
+        .nav-links a {
+            position: relative;
+            text-decoration: none;
+            padding: 6px 0;
+            color: var(--muted);
+            transition: color var(--speed) var(--bezier);
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--brand);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--speed) var(--bezier);
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            color: var(--brand);
+            outline: none;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a:focus-visible::after {
+            transform: scaleX(1);
+        }
+
+        .hero {
+            padding: 3.2rem 0 1.8rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(237, 240, 245, 0.95));
+            border-radius: 24px;
+            padding: clamp(18px, 3vw, 32px) clamp(20px, 4vw, 36px);
+            border: 1px solid rgba(216, 222, 230, 0.7);
+            box-shadow: 0 26px 48px rgba(24, 36, 56, 0.16);
+            width: min(100%, 1000px);
+            margin: 0 auto;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.3rem, 5vw, 3.1rem);
+            letter-spacing: 0.01em;
+            margin-bottom: 0.4rem;
+        }
+
+        .hero p {
+            color: var(--muted);
+            text-align: justify;
+        }
+
+        .hero .btn {
+            align-self: flex-start;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0.8rem 1.7rem;
+            border-radius: 999px;
+            background: var(--brand);
+            color: #ffffff;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: transform var(--speed) var(--bezier), box-shadow var(--speed) var(--bezier), background var(--speed) var(--bezier);
+            box-shadow: 0 16px 30px rgba(39, 76, 119, 0.22);
+        }
+
+        .btn:hover,
+        .btn:focus-visible {
+            transform: translateY(-2px);
+            background: #1f3c63;
+            box-shadow: 0 22px 40px rgba(31, 60, 99, 0.28);
+            outline: none;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f5f7fa;
+            color: var(--brand);
+            border: 1px solid rgba(39, 76, 119, 0.12);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover,
+        .btn-secondary:focus-visible {
+            background: var(--brand);
+            color: #ffffff;
+            box-shadow: 0 16px 32px rgba(39, 76, 119, 0.24);
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: clamp(1.9rem, 4vw, 2.6rem);
+            letter-spacing: 0.02em;
+            margin-bottom: 1.2rem;
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.32rem;
+            color: var(--text);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .kpi-card {
+            background: var(--panel);
+            border-radius: 16px;
+            padding: 18px 20px;
+            border: 1px solid rgba(216, 222, 230, 0.7);
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: transform var(--speed) var(--bezier), box-shadow var(--speed) var(--bezier);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            border-top: 4px solid transparent;
+            pointer-events: none;
+        }
+
+        .kpi-card:hover,
+        .kpi-card:focus-within {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .kpi-positive::before {
+            border-top-color: var(--kpi-up);
+        }
+
+        .kpi-negative::before {
+            border-top-color: var(--kpi-down);
+        }
+
+        .kpi-neutral::before {
+            border-top-color: rgba(84, 97, 117, 0.4);
+        }
+
+        .kpi-label {
+            font-size: 0.95rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
+
+        .kpi-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .kpi-trend {
+            margin-top: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.93rem;
+        }
+
+        .trend-up {
+            color: var(--kpi-up);
+        }
+
+        .trend-down {
+            color: var(--kpi-down);
+        }
+
+        .trend-down-green {
+            color: var(--kpi-up);
+        }
+
+        .trend-neutral {
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--gap);
+            margin-top: 1.8rem;
+        }
+
+        .card,
+        .dashboard {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: clamp(18px, 2.4vw, 26px);
+            border: 1px solid rgba(216, 222, 230, 0.72);
+            box-shadow: var(--shadow);
+            transition: transform var(--speed) var(--bezier), box-shadow var(--speed) var(--bezier);
+        }
+
+        .product-card {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .product-card:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 4px;
+        }
+
+        .card:hover,
+        .card:focus-within,
+        .dashboard:hover,
+        .dashboard:focus-within {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .dashboard {
+            margin-top: 38px;
+        }
+
+        .dashboard + .dashboard {
+            margin-top: 34px;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-actions .btn-secondary.is-active {
+            background: var(--brand);
+            color: #ffffff;
+        }
+
+        .chart-skeleton {
+            position: relative;
+            min-height: 300px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--panel-2);
+        }
+
+        .chart-skeleton::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, rgba(224, 229, 236, 0.6) 0%, rgba(224, 229, 236, 0.2) 45%, rgba(224, 229, 236, 0.6) 100%);
+            transform: translateX(-100%);
+            animation: shimmer 1.6s linear infinite;
+        }
+
+        .chart-skeleton.is-loaded::before,
+        .chart-skeleton.is-hidden::before {
+            opacity: 0;
+            animation: none;
+        }
+
+        .chart-skeleton.is-hidden {
+            display: none;
+        }
+
+        .analysis-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .highlight-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .highlight-card > div {
+            flex: 1 1 300px;
+        }
+
+        .highlight-card .highlight-image {
+            flex: 0 0 230px;
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            border: 1px solid rgba(216, 222, 230, 0.7);
+            box-shadow: 0 18px 36px rgba(24, 36, 56, 0.18);
+        }
+
+        .analysis-wrapper img {
+            flex: 1 1 320px;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 18px;
+            border: 1px solid rgba(216, 222, 230, 0.7);
+            box-shadow: 0 26px 55px rgba(24, 36, 56, 0.18);
+        }
+
+        .product-card .analysis-wrapper {
+            flex-direction: row;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .product-card .analysis-wrapper img {
+            width: 100%;
+            max-width: 340px;
+            height: auto;
+            border-radius: 16px;
+            border: 1px solid rgba(216, 222, 230, 0.65);
+            box-shadow: 0 18px 32px rgba(24, 36, 56, 0.16);
+        }
+
+        .analysis-wrapper div {
+            flex: 1 1 260px;
+            color: var(--muted);
+            text-align: justify;
+        }
+
+        .analysis-wrapper h4 {
+            margin-top: 0;
+            color: var(--text);
+        }
+
+        .analysis-wrapper.is-reversed {
+            flex-direction: row-reverse;
+        }
+
+        .product-detail {
+            padding: 48px 0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 22px;
+        }
+
+        .detail-block ul {
+            padding-left: 18px;
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .detail-block p {
+            color: var(--muted);
+        }
+
+        .radar-chart {
+            width: 100%;
+            min-height: 300px;
+        }
+
+        .section-subtitle {
+            margin-top: 2.4rem;
+            text-align: center;
+            font-size: 1.4rem;
+            color: var(--text);
+        }
+
+        .chart-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 8px 0 10px;
+        }
+
+        .trend-toggle {
+            appearance: none;
+            border: 1px solid rgba(29, 35, 45, 0.2);
+            background: linear-gradient(135deg, rgba(12, 14, 18, 0.12), rgba(12, 14, 18, 0.04));
+            color: var(--text);
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 6px 18px;
+            cursor: pointer;
+            transition: transform var(--speed) var(--bezier), box-shadow var(--speed) var(--bezier), background var(--speed) var(--bezier);
+        }
+
+        .trend-toggle.is-active {
+            background: #101216;
+            color: #ffffff;
+            border-color: rgba(12, 14, 18, 0.55);
+            box-shadow: 0 14px 28px rgba(16, 18, 22, 0.22);
+        }
+
+        .trend-toggle:hover {
+            transform: translateY(-1px);
+        }
+
+        .trend-toggle:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 3px;
+        }
+
+        .chart-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .activation-map-card {
+            margin-top: 24px;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+
+        .activation-map {
+            width: 100%;
+            height: clamp(260px, 40vh, 420px);
+            border-radius: 18px;
+            border: 1px solid rgba(216, 222, 230, 0.72);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .activation-map.leaflet-container,
+        .activation-map .leaflet-pane,
+        .activation-map .leaflet-tile-pane {
+            width: 100%;
+            height: 100%;
+        }
+
+        .activation-map-details {
+            color: var(--muted);
+        }
+
+        .activation-map-details h4 {
+            margin: 0 0 8px;
+            color: var(--text);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(216, 222, 230, 0.7);
+            background: var(--panel-2);
+            cursor: pointer;
+            transition: transform var(--speed) var(--bezier), box-shadow var(--speed) var(--bezier);
+        }
+
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(29, 36, 48, 0.18);
+            border: 2px solid #ffffff;
+            flex-shrink: 0;
+        }
+
+        .legend-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+
+        .legend-item span {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .legend-item small {
+            display: block;
+            color: var(--muted);
+        }
+
+        .legend-item:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 3px;
+        }
+
+        .legend-item:hover,
+        .legend-item.is-active {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 34px rgba(24, 36, 56, 0.14);
+            background: #ffffff;
+        }
+
+        footer {
+            border-top: 1px solid rgba(216, 222, 230, 0.7);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        footer .container {
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .revealable {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        .revealable.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 240ms var(--bezier), transform 240ms var(--bezier);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        @media (max-width: 960px) {
+            nav {
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .dashboard-actions {
+                justify-content: center;
+            }
+
+            .analysis-wrapper,
+            .analysis-wrapper.is-reversed {
+                flex-direction: column;
+            }
+
+            .highlight-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .highlight-card .highlight-image {
+                max-width: 100%;
+                width: 100%;
+                max-height: 300px;
+                object-fit: cover;
+            }
+
+            .analysis-wrapper img {
+                max-width: 100%;
+                max-height: 320px;
+                object-fit: cover;
+            }
+
+            .product-card .analysis-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .product-card .analysis-wrapper img {
+                max-width: 100%;
+                max-height: 280px;
+                object-fit: cover;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero-content {
+                padding: 22px;
+            }
+
+            .kpi-card {
+                padding: 18px 20px;
+            }
+
+            .analysis-wrapper,
+            .analysis-wrapper.is-reversed,
+            .highlight-card,
+            .product-card .analysis-wrapper {
+                gap: 18px;
+            }
+
+            .highlight-card .highlight-image,
+            .analysis-wrapper img,
+            .product-card .analysis-wrapper img {
+                max-height: 320px;
+            }
+
+            .analysis-wrapper div,
+            .highlight-card > div,
+            .product-card .analysis-wrapper div {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <img src="images/logojet.png" alt="Logo Jetour" loading="lazy">
+            </div>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#vision-general">Situación</a></li>
+                <li><a href="#diagnostico">Diagnóstico</a></li>
+                <li><a href="#proyecciones">Proyecciones</a></li>
+                <li><a href="#competencia">Competencia</a></li>
+                <li><a href="#lineamientos">Recomendaciones</a></li>
+                <li><a href="#anexo-ejecutivo">Monitor Ejecutivo</a></li>
+                <li><a href="#equipo-contacto">Equipo y Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="inicio" class="hero">
+            <div class="hero-content">
+                <h1>Inteligencia de Negocios para Jetour Bolivia</h1>
+                <p>El mercado vehicular en Bolivia está atravesando un periodo de transición compleja, influenciado por factores económicos, sociales y comerciales a nivel global y local. En este contexto, la balanza comercial con China juega un rol crucial, ya que las importaciones de vehículos chinos han experimentado una notable caída, impactando la oferta y el consumo en el país, especialmente en tiempos de crisis económica. Además, la nacionalización de autos indocumentados en Bolivia ha generado un cambio en las dinámicas de consumo, influyendo en las decisiones de compra de los consumidores y en las estrategias de los importadores.</p>
+                <a href="#vision-general" class="btn">Explorar análisis</a>
+                <div id="kpi-section" class="kpi-grid" role="list" tabindex="-1" aria-label="Indicadores clave de desempeño">
+                    <article class="kpi-card kpi-positive" role="listitem" tabindex="0">
+                        <div class="kpi-label">Utilidades acumuladas</div>
+                        <div class="kpi-value" data-target="7500000" data-prefix="$" data-decimals="0">$0</div>
+                        <div class="kpi-trend trend-up" aria-label="Nivel de crecimiento del 4.6% respecto al mes anterior">
+                            <span aria-hidden="true">▲</span> Nivel de crecimiento 4.6%
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-neutral" role="listitem" tabindex="0">
+                        <div class="kpi-label">Rotación de inventario</div>
+                        <div class="kpi-value" data-target="128" data-suffix=" unidades en total">0 unidades en total</div>
+                        <div class="kpi-trend trend-down-green" aria-label="La rotación bajó un 1.8% respecto al periodo anterior">
+                            <span aria-hidden="true">▼</span> Baja 1.8%
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-positive" role="listitem" tabindex="0">
+                        <div class="kpi-label">Ratio FOB/Utilidad</div>
+                        <div class="kpi-value" data-target="0.9" data-decimals="1">0.0</div>
+                        <div class="kpi-trend trend-up" aria-label="El ratio FOB sobre utilidad se mantiene saludable">
+                            <span aria-hidden="true">▲</span> En verde sobre 0.5
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-positive" role="listitem" tabindex="0">
+                        <div class="kpi-label">Leads</div>
+                        <div class="kpi-value" data-target="84" data-suffix=" leads">0 leads</div>
+                        <div class="kpi-trend trend-up" aria-label="Los leads crecen 12 unidades por semana">
+                            <span aria-hidden="true">▲</span> +12 leads por semana
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-neutral" role="listitem" tabindex="0">
+                        <div class="kpi-label">Prospecto por activaciones</div>
+                        <div class="kpi-value" data-target="4.6" data-suffix=" prospectos/evento" data-decimals="1">0.0 prospectos/evento</div>
+                        <div class="kpi-trend trend-neutral" aria-label="Relación estable de prospectos por evento">
+                            <span aria-hidden="true">■</span> Relación estable
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-negative" role="listitem" tabindex="0">
+                        <div class="kpi-label">Objetivo de ventas</div>
+                        <div class="kpi-value" data-target="40" data-suffix=" unidades">0 unidades</div>
+                        <div class="kpi-trend trend-down" aria-label="Solo se han realizado 3 ventas frente al objetivo de diciembre">
+                            <span aria-hidden="true">▼</span> Ventas realizadas: solo 3
+                        </div>
+                    </article>
+                    <article class="kpi-card kpi-positive" role="listitem" tabindex="0">
+                        <div class="kpi-label">Cuota de mercado en categoría</div>
+                        <div class="kpi-value" data-target="27" data-suffix="%">0%</div>
+                        <div class="kpi-trend trend-up" aria-label="Incremento de 1.4 puntos porcentuales en la cuota de mercado">
+                            <span aria-hidden="true">▲</span> +1.4 p.p.
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="vision-general">
+            <div class="container">
+                <h2>I. Situación del mercado</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Tendencias del mercado automotriz en Bolivia</h3>
+                        <p>Las cifras muestran la desaceleración del sector seguida de una caída notable de las importaciones con China. El mercado es más competitivo y por la inflación hoy los consumidores buscan el mejor precio para maximizar su poder adquisitivo.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Rol de China en el abastecimiento del sector</h3>
+                        <p>China sigue siendo el principal origen de vehículos importados y es clave para preservar precios competitivos. El monitoreo mensual de la balanza comercial reporta una caída drástica en la gestión 2025 por la caída del consumo.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Contexto regulatorio y efectos en la demanda</h3>
+                        <p>Las medidas anunciadas de nacionalización de autos indocumentados sin alivio tributario específico para el sector comercial automotriz complejizan la coyuntura. Es fundamental articular mensajes comerciales que diferencien a Jetour con aspectos como estilo de vida, garantía, servicio posventa y acceso a financiamiento.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>PIB Trimestral: Comercio</h3>
+                    <div id="pib-trimestral" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Importaciones CIF según clasificación (millones de USD)</h3>
+                    <div class="chart-toolbar" data-chart="#importaciones-cif" data-series="trend-importaciones-cif">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="importaciones-cif" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Balanza comercial: China - Bolivia (Importación desde Bolivia)</h3>
+                    <div class="chart-toolbar" data-chart="#balanza-comercial" data-series="trend-balanza">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="balanza-comercial" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="card highlight-card">
+                    <div>
+                        <h3>Nacionalización de autos indocumentados</h3>
+                        <p>Los anuncios de regularización de vehiculos indocumentados tuvieron un impacto relativo por departamento en las ventas de vehiculos 0km. En este escenario es importante posicionar mensajes de seguridad jurídica en la inversión del vehiculo, garantía extendida frente a contingencias atemorizar a la población con devolución de vehiculos robados.</p>
+                    </div>
+                    <img src="images/paz.png" alt="Foto de Paz" class="highlight-image" loading="lazy">
+                </div>
+            </div>
+        </section>
+
+        <section id="diagnostico">
+            <div class="container">
+                <h2>II. Diagnóstico del mercado</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Proyección de consumo nacional vinculada al PIB</h3>
+                        <p>El consumo final privado mantiene correlación con el desempeño del PIB.El incremento estacional de los ultimos dos meses del año podría impulsar las ventas rezagadas de la gestión 2025, pero se debe ser cautoloso con la proyección de ventas considerando que la variable estadisticamente significativa es la cambiaria.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Demanda proyectada por tipo de vehículo</h3>
+                        <p>El segmento de vagonetas (SUV) y motos lidera las matriculaciones en Santa Cruz, confirmando la preferencia por SUV compactas y utilitarios de uso familiar o mixtos. La información sirve para dimensionar inventarios y mix de modelos en relación a la tendencia del mercado.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Relación entre crédito, precios y niveles de venta</h3>
+                        <p>El endurecimiento crediticio impulsa ventas al contado y planes propios de financiamiento. Es recomendable integrar promociones que amortigüen las variaciones de tasas, preserven la salida promedio de inventario pero priorizando segmentos de venta al contado considerando que la variable cambiaria seguirá persistente.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Benchmarks regionales</h3>
+                        <p>El seguimiento de mercados vecinos como Perú, Argentina y Ecuador permite contrastar eficacia de campañas, precios FOB, tendencias de mercado para modular venta y negociación con proveedores.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Datos estacionales de consumo (millones de Bs.)</h3>
+                    <div class="chart-toolbar" data-chart="#consumo-2023" data-series="trend-consumo-2023">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="consumo-2023" class="chart-skeleton" aria-live="polite"></div>
+                    <div class="chart-toolbar" data-chart="#consumo-2024" data-series="trend-consumo-2024">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="consumo-2024" class="chart-skeleton" aria-live="polite" style="margin-top: 20px;"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Parque Automotor - Automóvil (Santa Cruz)</h3>
+                    <div class="chart-toolbar" data-chart="#parque-automovil" data-series="trend-parque-automovil">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="parque-automovil" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Parque Automotor - Vagoneta (Santa Cruz)</h3>
+                    <div class="chart-toolbar" data-chart="#parque-vagoneta" data-series="trend-parque-vagoneta">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="parque-vagoneta" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Parque Automotor - Moto (Santa Cruz)</h3>
+                    <div class="chart-toolbar" data-chart="#parque-moto" data-series="trend-parque-moto">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="parque-moto" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="proyecciones">
+            <div class="container">
+                <h2>III. Proyecciones y escenarios del sector</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Escenarios del tipo de cambio y sensibilidad del mercado</h3>
+                        <p>Se proyectan escenarios de tipo de cambio estable con ligeras presiones alcistas hacia fin de año, pero sin perforar la barrera de 14 bs, sin considerar escenarios de shocks políticos. Se debe monitorear la política cambiaria del nuevo gobierno de Paz para revisar la estacionalidad de precios finales a consumidor.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Comportamiento del consumidor en contextos de crisis</h3>
+                        <p>Ante contextos de liquidez restringida, los consumidores priorizan garantía extendida, ventaja tecnologica, relación calidad/precio y funcionalidad familiar para venta inmediata. Estrategias de valor agregado por segmentos son recomendados.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Exposición crediticia del sector</h3>
+                        <p>El portafolio crediticio concentra riesgos en préstamos para consumo y vehiculos con condiciones mas restrictivias y un TRE al alza hasta un 16&. Un monitoreo de cartera y alianzas con entidades financieras permite mitigar mora y sostener planes de cuotas accesibles.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Eventos macro esperados</h3>
+                        <p>Especial atención a las medidas anunciadas por el gobierno en relación a la estabilización cambiaria, su periodo de efecfividad, tipo de cambio real en el mercado y disponibilidad crediticia.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Predicción del Dólar USDT</h3>
+                    <div class="analysis-wrapper">
+                        <img src="images/prediccion_usdt.png" alt="Predicción del Dólar USDT" loading="lazy">
+                        <div>
+                            <h4>Estabilidad con tendencia a incremento en fin de año</h4>
+                            <p>La estabilidad observada en el valor del Dólar USDT durante el último semestre del 2025 responde al cambio de expectativas causado por el resultado electoral y un comportamiento estacional.</p>
+                            <p>Los modelos predictivos sugieren que la estabilidad continuará, con una ligera apreciación proyectada hacia fin de año, coherente con escenarios históricos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Importación General</h3>
+                    <div class="chart-toolbar" data-chart="#importacion-general" data-series="trend-importacion-general">
+                        <button type="button" class="trend-toggle is-active">Tendencia</button>
+                    </div>
+                    <div id="importacion-general" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Importación por segmentos</h3>
+                    <div id="importacion-segmentos" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Distribución de segmentos 2025</h3>
+                    <div id="segmentos-2025" class="chart-skeleton" aria-live="polite"></div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Market Share por marca</h3>
+                    <div id="market-share-marcas" class="chart-skeleton" aria-live="polite"></div>
+                    <div id="market-share-marcas-legend" class="chart-legend" role="list"></div>
+                </div>
+
+                <div class="dashboard">
+                    <div class="dashboard-actions">
+                        <button class="btn btn-secondary is-active" type="button" data-target-mode="history">Series históricas</button>
+                        <button class="btn btn-secondary" type="button" data-target-mode="recent">Últimos 3 años (%)</button>
+                    </div>
+                    <h3>Market Share por grupo</h3>
+                    <div id="market-share-grupos" class="chart-skeleton" aria-live="polite"></div>
+                    <div id="market-share-grupos-recent" class="chart-skeleton is-hidden" aria-live="polite"></div>
+                    <div id="market-share-grupos-legend" class="chart-legend" role="list"></div>
+                </div>
+
+               <div class="dashboard">
+                    <h3>Crecimiento interanual del sistema bancario</h3>
+                    <div class="analysis-wrapper">
+                        <img src="images/k1.webp" alt="Gráfico de crecimiento interanual de la cartera bancaria" loading="lazy">
+                        <div>
+                            <h4>Ajuste hacia la baja en crecimiento de cartera de credito</h4>
+                            <p>La menor iliquidez, la financiación del deficit fiscal e incentivos hacia inversiones de mediano plazo han disminiudo el crecimiento de la cartera. Especial atención al Banco Sol, Ganadero y Fortaleza. Situación crítica en Prodem y Mercantil.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Crecimiento por tipo de crédito</h3>
+                    <div class="analysis-wrapper is-reversed">
+                        <img src="images/k2.webp" alt="Crecimiento interanual de cartera por tipo de crédito" loading="lazy">
+                        <div>
+                            <h4>Empresarial y pyme lideran la demanda</h4>
+                            <p>La cartera de consumo se ha reducido frente a la empresarial, mientras los créditos hipotecarios practicamente han desaparecido por la situación del TRE y variables inflacionarias. Esto prioriza creditos con fines empresariales, utilitarios y ventas al contado en clientes. Todas las demas forma de credito están con tendencia a la baja.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Mora por entidad bancaria</h3>
+                    <div class="analysis-wrapper">
+                        <img src="images/k3.webp" alt="Evolución de la mora del sistema bancario por entidad" loading="lazy">
+                        <div>
+                            <h4>Concentración dispersa y de alerta</h4>
+                            <p>Banco Bisa y Fortaleza muestran mayor sensibilidad a los ciclos económicos, elevando la mora ante retrasos logísticos y presiones cambiarias.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Mora por tipo de crédito</h3>
+                    <div class="analysis-wrapper is-reversed">
+                        <img src="images/k4.webp" alt="Evolución de la mora por tipo de crédito" loading="lazy">
+                        <div>
+                            <h4>Créditos hipotecarios y de consumo bajo observación</h4>
+                            <p>Las carteras en hipotecas y consumo muestran una preocupante elevación en su mora.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard">
+                    <h3>Cartera reprogramada por tipo de cuenta</h3>
+                    <div class="analysis-wrapper">
+                        <img src="images/k5.webp" alt="Evolución de la cartera reprogramada por tipo de cuenta" loading="lazy">
+                        <div>
+                            <h4>Reprogramaciones continuan bajo observación</h4>
+                            <p>Los programas de alivio mantienen saldos significativos en cuentas comerciales y de consumo, aunque muestran disparidades deben seguir siendo observadas. La coordinación con entidades financieras sigue siendo clave para sostener inventarios competitivos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competencia">
+            <div class="container">
+                <h2>IV. Competencia</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Proyección financiera y potencial de marca</h3>
+                        <p>El estudio de competencia proyecta un margen bruto sostenible gracias a la integración regional de servicio posventa en ventas a corto junto al posicionamiento del modelo Max en el segmento familiar premium.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Evaluación de canales de venta y desempeño comercial</h3>
+                        <p>La multicanalidad combina showrooms físicos, puntos móviles y canales digitales. El seguimiento de tasas de conversión por canal ayuda a reasignar inversión hacia los puntos con mejor retorno optimizando recursos financieros.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Estrategias de marketing y eficiencia</h3>
+                        <p>Los indicadores de CPL, conversión y auspicios muestran mejor desempeño en campañas segmentadas por estilo de vida. Se recomienda continuar con activaciones experienciales y remarketing personalizado basado en Jetour Life.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Competidores y posicionamiento en el mercado</h3>
+                        <p>Hyunday y Chery lideran la mente del consumidor en SUV medianas. Jetour refuerza su propuesta con garantías superiores y diseño vanguardista, diferenciándose en servicio posventa.</p>
+                    </div>
+                </div>
+                <div class="grid">
+                    <a class="card product-card" href="#x50-detalle">
+                        <h3>X50</h3>
+                        <div class="analysis-wrapper">
+                            <img src="images/X50.png" alt="Jetour X50" style="max-width: 200px;" loading="lazy">
+                            <div>
+                                <p>El Jetour X50 es la puerta de entrada al mundo SUV de Jetour: compacto, tecnológico y con carácter urbano. Su motor 1.5 turbo y caja DCT ofrecen agilidad y eficiencia, mientras que su interior con pantalla de 10.25” y acabados refinados brindan confort premium. Ideal para jóvenes profesionales y familias que buscan diseño moderno, conectividad total y la experiencia de conducir algo más que un auto: un nuevo estilo de vida.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a class="card product-card" href="#x70-detalle">
+                        <h3>X70</h3>
+                        <div class="analysis-wrapper">
+                            <img src="images/x80.png" alt="Jetour X70" style="max-width: 200px;" loading="lazy">
+                            <div>
+                                <p>El Jetour X70 combina elegancia y practicidad en un SUV mediano de espíritu familiar. Con hasta tres filas de asientos, motor 1.5 turbo y cabina digital, equilibra potencia, espacio y confort. Su diseño transmite presencia y sofisticación, con detalles de lujo y sistemas de asistencia que garantizan seguridad en todo viaje. Pensado para quienes necesitan más espacio sin renunciar al estilo y la tecnología.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a class="card product-card" href="#dashing-detalle">
+                        <h3>Dashing</h3>
+                        <div class="analysis-wrapper">
+                            <img src="images/dashing.png" alt="Jetour Dashing" style="max-width: 250px;" loading="lazy">
+                            <div>
+                                <p>El Jetour Dashing redefine el SUV moderno: audaz, aerodinámico y tecnológicamente avanzado. Con motor turbo, doble embrague y un interior minimalista dominado por pantallas digitales, representa la nueva generación de vehículos inteligentes. Está hecho para líderes jóvenes, emprendedores y profesionales que valoran el diseño, la innovación y la identidad propia en cada trayecto.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a class="card product-card" href="#t2-detalle">
+                        <h3>T2</h3>
+                        <div class="analysis-wrapper">
+                            <img src="images/t1.png" alt="Jetour T2" style="max-width: 200px;" loading="lazy">
+                            <div>
+                                <p>El Jetour T2 es el SUV más robusto y sofisticado de la marca. Su estructura cuadrada y tracción 4x4 transmiten fuerza, mientras que su interior premium con pantallas de gran formato y modos off-road ofrece confort y control en cualquier terreno. Diseñado para quienes buscan libertad y distinción, el T2 combina aventura, tecnología y lujo en una sola máquina.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="section-subtitle">Segmentación estratégica</div>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Segmentos de compradores y hábitos de decisión</h3>
+                        <p>Se identifican tres arquetipos clave: familias urbanas con capacidad de compra inmediata, empresas que podrían acceder a credito para utilitarios y empresarios con capacidad de absorver presiones cambiarias..</p>
+                    </div>
+                    <div class="card">
+                        <h3>Perfiles socioeconómicos relevantes</h3>
+                        <p>Los consumidores de Jetour se concentran en niveles socioeconómicos medio-altos de Santa Cruz, La Paz y Cochabamba, con ingresos diversificados y alta busqueda de relación calidad/precio.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Atributos determinantes en la decisión de compra</h3>
+                        <p>Seguridad activa, garantía extendida, tecnología interior y costo de mantenimiento son los atributos diferenciales más valorados en el mercado boliviano.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Factores de compra en marcas chinas (Caso Jetour X70)</h3>
+                        <p>El Jetour X70 destaca por equilibrio entre lujo accesible y performance. El paquete tecnológico y la conectividad con la app Jetour Connect refuerzan la percepción de valor.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="x50-detalle" class="product-detail">
+            <div class="container">
+                <h2>X50</h2>
+                <div class="detail-grid" data-product="x50">
+                    <article class="card detail-block">
+                        <h3>Características del producto</h3>
+                        <ul>
+                            <li>Motor turbo 1.5L con modo eco inteligente.</li>
+                            <li>SUV compacto urbano con estilo juvenil, caja DCT. Ideal para conductores que buscan diseño moderno, conectividad total y buena relación entre tecnología y costo.</li>
+                        </ul>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Competencia</h3>
+                        <p>Suzuki Fronx, GAC GS3, KIA Sonet, Hyundai Creta, VW T-Cross.</p>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Pentágono de valores</h3>
+                        <div id="radar-x50" class="radar-chart chart-skeleton" aria-live="polite"></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="x70-detalle" class="product-detail">
+            <div class="container">
+                <h2>X70</h2>
+                <div class="detail-grid" data-product="x70">
+                    <article class="card detail-block">
+                        <h3>Características del producto</h3>
+                        <ul>
+                            <li>Motor 1.6T GDI con 197 HP y tracción inteligente. SUV mediano con espíritu familiar. Combina amplio espacio interior, tres filas opcionales y confort premium. Se orienta a familias y profesionales que buscan elegancia, funcionalidad y buena relación valor-precio.</li>
+                        </ul>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Competencia</h3>
+                        <p>GAC Emzoom, Suzuki Grand Vitara, Hyundai Creta Grand, KIA Sportage.</p>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Pentágono de valores</h3>
+                        <div id="radar-x70" class="radar-chart chart-skeleton" aria-live="polite"></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashing-detalle" class="product-detail">
+            <div class="container">
+                <h2>Dashing</h2>
+                <div class="detail-grid" data-product="dashing">
+                    <article class="card detail-block">
+                        <h3>Características del producto</h3>
+                        <ul>
+                            <li>Motor 1.6T GDI con caja DCT de 7 velocidades. SUV crossover de estética deportiva y tecnológica. Combina diseño aerodinámico, iluminación LED, doble pantalla digital y asistencias avanzadas. Pensado para un público joven, urbano y exigente.</li>
+                        </ul>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Competencia</h3>
+                        <p>GAC GS4 Max, Geely Coolray, MG RX5, Changan CS55 Plus.</p>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Pentágono de valores</h3>
+                        <div id="radar-dashing" class="radar-chart chart-skeleton" aria-live="polite"></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="t2-detalle" class="product-detail">
+            <div class="container">
+                <h2>T2</h2>
+                <div class="detail-grid" data-product="t2">
+                    <article class="card detail-block">
+                        <h3>Características del producto</h3>
+                        <ul>
+                            <li>Motor eficiente 1.0L turbo con start-stop. SUV robusto de lujo con tracción 4x4 y espíritu aventurero. Su diseño cuadrado y postura elevada proyectan fuerza; combina interior premium, gran pantalla central y modos de conducción off-road.</li>
+                        </ul>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Competencia</h3>
+                        <p>BYD Song, Chery Tiggo 7 Pro, KIA Sportage AWD, Ford Territory.</p>
+                    </article>
+                    <article class="card detail-block">
+                        <h3>Pentágono de valores</h3>
+                        <div id="radar-t2" class="radar-chart chart-skeleton" aria-live="polite"></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="lineamientos">
+            <div class="container">
+                <h2>V. Recomendaciones</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Activaciones sugeridas</h3>
+                        <p>Activar campañas de test drive itinerantes y reforzar la analítica de leads en tiempo real.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Priorización de acciones tácticas</h3>
+                        <p>Priorizar entregas rápidas de SUV medianas, escalar ventas en segmentos con alta capacidad de resiliencia en contextos cambiarios adversos.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Roadmap de ejecución</h3>
+                        <p>1) Desarrollar un CRM unificado con tableros de desempeño. 2) Implementar programas de fidelización y medición de NPS por canal.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="anexo-ejecutivo">
+            <div class="container">
+                <h2>Monitor Ejecutivo</h2>
+                <div class="card">
+                    <h3>Tablero BI y KPIs post-consultoría</h3>
+                    <p>El monitoreo se sustenta en los tableros de importaciones, consumo y parque automotor presentados en este informe. Cada dashboard integra indicadores de crecimiento y participación por segmento para dar seguimiento a las metas comerciales.</p>
+                    <p>La actualización mensual permitirá medir el impacto de iniciativas tácticas, controlando inventarios, performance de canales y sensibilidad del consumidor ante cambios macroeconómicos.</p>
+                     <div class="activation-map-card">
+                        <div id="activations-map" class="activation-map" role="img" aria-label="Mapa de Santa Cruz de la Sierra con puntos de activaciones comerciales"></div>
+                        <div class="activation-map-details">
+                            <h4>Activaciones comerciales en Santa Cruz de la Sierra</h4>
+                            <p>El mapa resalta los principales puntos de activación planificados para reforzar presencia de marca en zonas de alto tráfico como el Cambódromo, el Ventura Mall y el cuarto anillo. Cada marcador incluye la fecha estimada del evento y permite coordinar logística y equipos en campo.</p>
+                            <ul>
+                                <li><strong>Cambódromo:</strong> Feria de experiencia Jetour &mdash; 12 de octubre.</li>
+                                <li><strong>Ventura Mall:</strong> Test drives urbanos &mdash; 18 al 20 de octubre.</li>
+                                <li><strong>Av. Cristo Redentor:</strong> Roadshow nocturno &mdash; 26 de octubre.</li>
+                                <li><strong>Equipetrol:</strong> Networking con flotas corporativas &mdash; 7 de noviembre.</li>
+                            </ul>
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="equipo-contacto">
+            <div class="container">
+                <h2>Equipo y Contacto</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Danilo Saavedra Mendizabal</h3>
+                        <p>CEO de Interauto Savv Ltda | Jetour Bolivia</p>
+                    </div>
+                    <div class="card">
+                        <h3>Daniel Flores Escobar</h3>
+                        <p>Analista de Inteligencia de Negocios</p>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 28px; text-align: center;">
+                    <p><strong>Email:</strong> interautosavv@gmail.com</p>
+                    <p><strong>WhatsApp Principal:</strong> +591 78165869</p>
+                    <p><strong>WhatsApp Secundario:</strong> +591 75549561</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Interauto Savv | Jetour Bolivia. Todos los derechos reservados. Quantis Consulting.</p>
+            <p>Desarrollado por Daniel Flores Escobar</p>
+        </div>
+    </footer>
+
+    <script>
+        var chartRegistry = {};
+        var trendSeriesRegistry = {};
+        var brandLegendState = { activeIndex: null };
+        var groupLegendState = { activeIndex: null };
+        var groupCharts = { history: null, recent: null };
+        var brandColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#636363'];
+        var groupColors = ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#1f78b4'];
+
+        function shuffleArray(source) {
+            var array = Array.isArray(source) ? source.slice() : Array.from(source);
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array;
+        }
+
+        function calculateTrendline(data) {
+            var n = data.length;
+            var sumX = 0;
+            var sumY = 0;
+            var sumXY = 0;
+            var sumX2 = 0;
+            for (var i = 0; i < n; i++) {
+                sumX += i;
+                sumY += data[i];
+                sumXY += i * data[i];
+                sumX2 += i * i;
+            }
+            var denominator = n * sumX2 - sumX * sumX;
+            if (denominator === 0) {
+                return data.slice();
+            }
+            var slope = (n * sumXY - sumX * sumY) / denominator;
+            var intercept = (sumY - slope * sumX) / n;
+            return data.map(function (_, index) {
+                return Math.round((slope * index + intercept) * 100) / 100;
+            });
+        }
+
+        function movingAverage(data, window) {
+            var result = [];
+            for (var i = 0; i < data.length; i++) {
+                if (i + 1 < window) {
+                    result.push(null);
+                } else {
+                    var total = 0;
+                    for (var j = i - window + 1; j <= i; j++) {
+                        total += data[j];
+                    }
+                    result.push(Math.round((total / window) * 100) / 100);
+                }
+            }
+            return result;
+        }
+
+        function initChart(selector, options) {
+            var element = document.querySelector(selector);
+            if (!element) {
+                return null;
+            }
+            var chart = echarts.init(element);
+            chart.setOption(options);
+            element.classList.add('is-loaded');
+            chartRegistry[selector] = chart;
+            return chart;
+        }
+
+        function resizeCharts() {
+            Object.keys(chartRegistry).forEach(function (key) {
+                var instance = chartRegistry[key];
+                if (instance) {
+                    instance.resize();
+                }
+            });
+        }
+
+        window.addEventListener('resize', resizeCharts);
+
+        function numberFormatter(value) {
+            return new Intl.NumberFormat('es-BO').format(value);
+        }
+
+        function baseGrid() {
+            return { left: '5%', right: '5%', top: 46, bottom: 48 };
+        }
+
+        function barGradient() {
+            return '#000000';
+        }
+
+        function createLineSeries(name, data, color, options) {
+            options = options || {};
+            var seriesData = Array.isArray(data) ? data.slice() : data;
+            var series = {
+                name: name,
+                type: 'line',
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 5,
+                lineStyle: {
+                    width: 2,
+                    color: color,
+                    type: options.dashed ? 'dashed' : 'solid'
+                },
+                itemStyle: {
+                    color: color,
+                    borderColor: '#000000',
+                    borderWidth: 1.5
+                },
+                data: seriesData
+            };
+            if (options.area) {
+                series.areaStyle = {
+                    color: 'rgba(0, 0, 0, 0.14)'
+                };
+            }
+            if (options.extra) {
+                var extra = Object.assign({}, options.extra);
+                if (extra.id) {
+                    series.id = extra.id;
+                    if (Array.isArray(seriesData)) {
+                        trendSeriesRegistry[extra.id] = seriesData.slice();
+                    }
+                    delete extra.id;
+                }
+                Object.assign(series, extra);
+            }
+            return series;
+        }
+
+        function setTrendVisibility(selector, seriesId, isActive) {
+            var chart = chartRegistry[selector];
+            var stored = trendSeriesRegistry[seriesId];
+            if (!chart || !stored) {
+                return;
+            }
+            var nextData = isActive ? stored.slice() : stored.map(function () { return null; });
+            chart.setOption({
+                series: [{
+                    id: seriesId,
+                    data: nextData,
+                    lineStyle: { opacity: isActive ? 1 : 0 },
+                    itemStyle: { opacity: isActive ? 1 : 0 }
+                }]
+            });
+        }
+
+        function setupTrendToggles() {
+            var toolbars = Array.prototype.slice.call(document.querySelectorAll('.chart-toolbar[data-chart][data-series]'));
+            toolbars.forEach(function (toolbar) {
+                var selector = toolbar.dataset.chart;
+                var seriesId = toolbar.dataset.series;
+                var button = toolbar.querySelector('.trend-toggle');
+                if (!button) {
+                    return;
+                }
+                var state = button.classList.contains('is-active');
+                button.setAttribute('aria-pressed', state ? 'true' : 'false');
+                button.addEventListener('click', function () {
+                    state = !state;
+                    button.classList.toggle('is-active', state);
+                    button.setAttribute('aria-pressed', state ? 'true' : 'false');
+                    setTrendVisibility(selector, seriesId, state);
+                });
+            });
+        }
+
+        function buildCharts() {
+            var lineColor = '#000000';
+            var neutralColor = '#000000';
+
+            var pibCategorias = ['1 (2022)', '2 (2022)', '3 (2022)', '4 (2022)', '1 (2023)', '2 (2023)', '3 (2023)', '4 (2023)', '1 (2024)', '2 (2024)', '3 (2024)', '4 (2024)', '1 (2025)', '2 (2025)'];
+            var pibComercio = [7023, 8342, 7415, 6847, 6737, 8227, 7823, 7752, 6735, 8388, 7651, 7874, 7459, 10165];
+            initChart('#pib-trimestral', {
+                grid: baseGrid(),
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'line' },
+                    formatter: function (params) {
+                        var item = params[0];
+                        return item.axisValue + '<br>' + item.marker + numberFormatter(item.data) + ' MM Bs';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: pibCategorias,
+                    axisLabel: { color: '#6b7484', rotate: -25 },
+                    axisLine: { lineStyle: { color: '#d8dee6' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#6b7484',
+                        formatter: function (value) { return numberFormatter(value); }
+                    },
+                    splitLine: { lineStyle: { color: '#e4e8ef' } }
+                },
+                series: [createLineSeries('PIB Comercio', pibComercio, lineColor, { area: true })]
+            });
+
+            var importacionesData = [507.6, 333.6, 459.2, 533.5, 598.3, 379.6, 159.3];
+            initChart('#importaciones-cif', {
+                grid: baseGrid(),
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: function (params) {
+                        if (!params.length) {
+                            return '';
+                        }
+                        var lines = [params[0].axisValue];
+                        params.forEach(function (item) {
+                            if (item.seriesType === 'line') {
+                                lines.push(item.marker + 'Tendencia: ' + numberFormatter(item.data) + ' M USD');
+                            } else {
+                                lines.push(item.marker + numberFormatter(item.data) + ' M USD');
+                            }
+                        });
+                        return lines.join('<br>');
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['2019', '2020', '2021', '2022', '2023(p)', '2024(p)', 'Ene-Jul 2025(p)'],
+                    axisLabel: { color: '#6b7484' },
+                    axisLine: { lineStyle: { color: '#d8dee6' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#6b7484',
+                        formatter: function (value) { return numberFormatter(value); }
+                    },
+                    splitLine: { lineStyle: { color: '#e4e8ef' } }
+                },
+                series: [
+                    {
+                        name: 'Vehículos de transporte particular',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: {
+                            color: barGradient(),
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: { itemStyle: { color: '#000000' } },
+                        data: importacionesData
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(importacionesData), neutralColor, { dashed: true, extra: { id: 'trend-importaciones-cif' } })
+                ]
+            });
+
+            var balanzaCategorias = ['ene-22', 'feb-22', 'mar-22', 'abr-22', 'may-22', 'jun-22', 'jul-22', 'ago-22', 'sept-22', 'oct-22', 'nov-22', 'dic-22', 'ene-23', 'feb-23', 'mar-23', 'abr-23', 'may-23', 'jun-23', 'jul-23', 'ago-23', 'sept-23', 'oct-23', 'nov-23', 'dic-23', 'ene-24', 'feb-24', 'mar-24', 'abr-24', 'may-24', 'jun-24', 'jul-24', 'ago-24', 'sept-24', 'oct-24', 'nov-24', 'dic-24', 'ene-25', 'feb-25', 'mar-25', 'abr-25', 'may-25', 'jun-25', 'jul-25'];
+            var balanzaData = [172.6, 209.1, 229.5, 198.2, 201.3, 170.8, 193.0, 244.9, 248.2, 224.4, 243.0, 271.0, 190.8, 163.3, 215.4, 162.2, 169.1, 207.3, 202.8, 242.1, 173.6, 233.0, 228.7, 206.1, 196.6, 166.0, 164.3, 189.3, 165.8, 155.3, 241.3, 180.4, 177.2, 170.4, 176.0, 229.3, 82.6, 80.6, 85.3, 97.3, 100.3, 93.1, 132.2];
+            initChart('#balanza-comercial', {
+                grid: baseGrid(),
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'line' },
+                    formatter: function (params) {
+                        if (!params.length) {
+                            return '';
+                        }
+                        var lines = [params[0].axisValue];
+                        params.forEach(function (item) {
+                            lines.push(item.marker + numberFormatter(item.data) + ' M USD');
+                        });
+                        return lines.join('<br>');
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: balanzaCategorias,
+                    axisLabel: { color: '#6b7484', rotate: -45 },
+                    axisLine: { lineStyle: { color: '#d8dee6' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { color: '#6b7484', formatter: function (value) { return numberFormatter(value); } },
+                    splitLine: { lineStyle: { color: '#e4e8ef' } }
+                },
+                series: [
+                    createLineSeries('China', balanzaData, lineColor, { area: true }),
+                    createLineSeries('Media móvil (5 meses)', movingAverage(balanzaData, 5), neutralColor, { dashed: true, extra: { id: 'trend-balanza' } })
+                ]
+            });
+
+            var consumoCategorias = ['I Trimestre', 'II Trimestre', 'III Trimestre', 'IV Trimestre'];
+            var consumo2023Data = [10100242, 9780639, 9985805, 12822006];
+            initChart('#consumo-2023', {
+                grid: baseGrid(),
+                legend: { show: false },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                xAxis: { type: 'category', data: consumoCategorias, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: '2023(p)',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        emphasis: { itemStyle: { color: '#000000' } },
+                        data: consumo2023Data
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(consumo2023Data), neutralColor, { dashed: true, extra: { id: 'trend-consumo-2023' } })
+                ]
+            });
+
+            var consumo2024Data = [10241883, 10098565, 10015851, 12448465];
+            initChart('#consumo-2024', {
+                grid: baseGrid(),
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                xAxis: { type: 'category', data: consumoCategorias, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: '2024(p)',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        emphasis: { itemStyle: { color: '#000000' } },
+                        data: consumo2024Data
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(consumo2024Data), neutralColor, { dashed: true, extra: { id: 'trend-consumo-2024' } })
+                ]
+            });
+
+            var parqueAnios = ['2020', '2021', '2022', '2023', '2024'];
+            var parqueAutomovilData = [112371, 116002, 119129, 122291, 124926];
+            initChart('#parque-automovil', {
+                grid: baseGrid(),
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                xAxis: { type: 'category', data: parqueAnios, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: 'Automóvil',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        data: parqueAutomovilData
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(parqueAutomovilData), neutralColor, { dashed: true, extra: { id: 'trend-parque-automovil' } })
+                ]
+            });
+
+            var parqueVagonetaData = [175617, 181510, 188311, 195487, 204308];
+            initChart('#parque-vagoneta', {
+                grid: baseGrid(),
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                xAxis: { type: 'category', data: parqueAnios, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: 'Vagoneta',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        data: parqueVagonetaData
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(parqueVagonetaData), neutralColor, { dashed: true, extra: { id: 'trend-parque-vagoneta' } })
+                ]
+            });
+
+            var parqueMotoData = [250396, 284004, 321484, 362535, 401515];
+            initChart('#parque-moto', {
+                grid: baseGrid(),
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                xAxis: { type: 'category', data: parqueAnios, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: 'Moto',
+                        type: 'bar',
+                        barWidth: '45%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        data: parqueMotoData
+                    },
+                    createLineSeries('Tendencia lineal', calculateTrendline(parqueMotoData), neutralColor, { dashed: true, extra: { id: 'trend-parque-moto' } })
+                ]
+            });
+
+            var importacionGeneralCategorias = ['ene-24', 'feb-24', 'mar-24', 'abr-24', 'may-24', 'jun-24', 'jul-24', 'ago-24', 'sept-24', 'oct-24', 'nov-24', 'dic-24', 'ene-25', 'feb-25', 'mar-25', 'abr-25', 'may-25', 'jun-25', 'jul-25', 'ago-25'];
+            var importacionGeneralData = [3050, 3182, 2542, 1950, 2355, 2052, 2385, 2512, 2076, 2050, 2207, 2314, 2021, 1884, 2071, 2110, 1861, 1747, 1884, 2143];
+            initChart('#importacion-general', {
+                grid: baseGrid(),
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'line' },
+                    formatter: function (params) {
+                        if (!params.length) {
+                            return '';
+                        }
+                        var lines = [params[0].axisValue];
+                        params.forEach(function (item) {
+                            if (item.seriesType === 'line' && item.seriesName !== 'Importación General') {
+                                lines.push(item.marker + 'Tendencia: ' + numberFormatter(item.data) + ' unidades');
+                            } else {
+                                lines.push(item.marker + numberFormatter(item.data) + ' unidades');
+                            }
+                        });
+                        return lines.join('<br>');
+                    }
+                },
+                xAxis: { type: 'category', data: importacionGeneralCategorias, axisLabel: { color: '#6b7484', rotate: -30 }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    createLineSeries('Importación General', importacionGeneralData, lineColor, { area: true }),
+                    createLineSeries('Tendencia', calculateTrendline(importacionGeneralData), neutralColor, { dashed: true, extra: { id: 'trend-importacion-general', showSymbol: false } })
+                ]
+            });
+
+            var importacionSegmentosCategorias = ['Auto', 'Pickup', 'SUV', 'Utility'];
+            var importacion2024 = [2995, 2967, 12449, 1617];
+            var importacion2025 = [2041, 2758, 9210, 1711];
+            initChart('#importacion-segmentos', {
+                grid: baseGrid(),
+                legend: { data: ['2024', '2025'], top: 10, textStyle: { color: '#4f5a6b' } },
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                xAxis: { type: 'category', data: importacionSegmentosCategorias, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } } },
+                series: [
+                    {
+                        name: '2024',
+                        type: 'bar',
+                        barGap: '30%',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        emphasis: { itemStyle: { color: '#000000' } },
+                        data: importacion2024
+                    },
+                    {
+                        name: '2025',
+                        type: 'bar',
+                        itemStyle: { color: barGradient(), borderRadius: [6, 6, 0, 0] },
+                        emphasis: { itemStyle: { color: '#000000' } },
+                        data: importacion2025
+                    }
+                ]
+            });
+
+            var segmentos2025Data = [13, 59, 11, 17];
+            initChart('#segmentos-2025', {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        return params.marker + params.name + ': ' + params.value + '%';
+                    }
+                },
+                series: [{
+                    name: 'Segmentos 2025',
+                    type: 'pie',
+                    radius: ['48%', '72%'],
+                    center: ['50%', '52%'],
+                    itemStyle: { borderColor: '#ffffff', borderWidth: 2 },
+                    label: { formatter: '{b}\n{d}%' },
+                    data: [
+                        { name: 'Auto', value: segmentos2025Data[0], itemStyle: { color: '#000000' } },
+                        { name: 'SUV', value: segmentos2025Data[1], itemStyle: { color: '#000000' } },
+                        { name: 'Utility', value: segmentos2025Data[2], itemStyle: { color: '#000000' } },
+                        { name: 'PickUp', value: segmentos2025Data[3], itemStyle: { color: '#000000' } }
+                    ]
+                }]
+            });
+
+            var marketShareMarcasData = [
+                { name: 'Suzuki', value: 3115, logo: 'images/logos/a1.png' },
+                { name: 'Toyota', value: 2199, logo: 'images/logos/a2.png' },
+                { name: 'KIA', value: 1019, logo: 'images/logos/a3.png' },
+                { name: 'Nissan', value: 828, logo: 'images/logos/a4.png' },
+                { name: 'GAC', value: 728, logo: 'images/logos/a5.png' },
+                { name: 'Changan', value: 715, logo: 'images/logos/a6.png' },
+                { name: 'Foton', value: 664, logo: 'images/logos/a7.png' },
+                { name: 'Mitsubishi', value: 645, logo: 'images/logos/a8.png' },
+                { name: 'Hyunday', value: 631, logo: 'images/logos/a9.png' },
+                { name: 'Chery', value: 415, logo: 'images/logos/a10.png' },
+                { name: 'Otros', value: 4476 }
+            ].map(function (item, index) {
+                return Object.assign({ color: brandColors[index % brandColors.length] }, item);
+            });
+            var marketShareMarcasChart = initChart('#market-share-marcas', {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        return params.marker + params.name + ': ' + numberFormatter(params.value) + ' unidades (' + params.percent.toFixed(1) + '%)';
+                    }
+                },
+                series: [{
+                    id: 'shareMarcas',
+                    name: 'Participación por marca',
+                    type: 'pie',
+                    radius: ['50%', '72%'],
+                    center: ['50%', '52%'],
+                    itemStyle: { borderColor: '#ffffff', borderWidth: 2 },
+                    label: { formatter: '{b}\n{d}%' },
+                    data: marketShareMarcasData.map(function (item) {
+                        return { name: item.name, value: item.value, itemStyle: { color: item.color } };
+                    })
+                }]
+            });
+
+            if (marketShareMarcasChart) {
+                buildBrandLegend(marketShareMarcasData, marketShareMarcasChart);
+            }
+
+            var marketShareGruposSeries = [
+                { name: 'Imcruz', data: [10096, 15951, 14303, 15253, 8975, 4415], logo: 'images/logos/grupos/b1.png' },
+                { name: 'Toyosa', data: [3756, 4661, 6518, 7719, 5110, 2428], logo: 'images/logos/grupos/b2.png' },
+                { name: 'Nibol', data: [2265, 2795, 1461, 5524, 3021, 1179], logo: 'images/logos/grupos/b3.png' },
+                { name: 'Astara Ovando', data: [2045, 1995, 3622, 4234, 1855, 1426], logo: 'images/logos/grupos/b4.png' },
+                { name: 'Autosud', data: [466, 511, 1117, 2354, 2261, 1042], logo: 'images/logos/grupos/b6.png' },
+                { name: 'Viaggio', data: [0, 505, 907, 1135, 1110, 842], logo: 'images/logos/grupos/b5.png' },
+                { name: 'Carmax', data: [1152, 1418, 1896, 2045, 980, 860], logo: 'images/logos/grupos/b7.webp' },
+                { name: 'Hansa', data: [701, 1621, 1417, 1074, 378, 162], logo: 'images/logos/grupos/b8.png' }
+            ].map(function (serie, index) {
+                return Object.assign({ color: groupColors[index % groupColors.length] }, serie);
+            });
+            var marketShareGruposCategorias = ['2020', '2021', '2022', '2023', '2024', '2025'];
+
+            groupCharts.history = initChart('#market-share-grupos', {
+                grid: baseGrid(),
+                tooltip: { trigger: 'axis', axisPointer: { type: 'line' } },
+                legend: { show: false },
+                xAxis: { type: 'category', data: marketShareGruposCategorias, axisLabel: { color: '#6b7484' }, axisLine: { lineStyle: { color: '#d8dee6' } } },
+                yAxis: { type: 'value', axisLabel: { color: '#6b7484', formatter: numberFormatter }, splitLine: { lineStyle: { color: '#e4e8ef' } }, name: 'Unidades vendidas' },
+                series: marketShareGruposSeries.map(function (serie) {
+                    return createLineSeries(serie.name, serie.data, serie.color, {
+                        area: false,
+                        extra: { id: serie.name }
+                    });
+                })
+            });
+
+            var marketShareGruposRecentTotals = marketShareGruposSeries.map(function (serie) {
+                return serie.data.slice(-3).reduce(function (acc, value) { return acc + value; }, 0);
+            });
+
+            groupCharts.recent = initChart('#market-share-grupos-recent', {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        return params.marker + params.name + ': ' + numberFormatter(params.value) + ' unidades (' + params.percent.toFixed(1) + '%)';
+                    }
+                },
+                series: [{
+                    id: 'shareGruposRecent',
+                    name: 'Participación últimos 3 años',
+                    type: 'pie',
+                    radius: ['50%', '72%'],
+                    center: ['50%', '52%'],
+                    label: { formatter: '{b}\n{d}%' },
+                    itemStyle: { borderColor: '#ffffff', borderWidth: 2 },
+                    data: marketShareGruposSeries.map(function (serie, index) {
+                        return { value: marketShareGruposRecentTotals[index], name: serie.name, itemStyle: { color: serie.color } };
+                    })
+                }]
+            });
+
+            buildGroupLegend(marketShareGruposSeries, marketShareGruposRecentTotals);
+
+            var radarConfigs = [
+                {
+                    selector: '#radar-x50',
+                    name: 'X50',
+                    metrics: {
+                        'Calidad-precio': 88,
+                        'Tecnología': 82,
+                        'Seguridad': 78,
+                        'Eficiencia': 75,
+                        'Postventa': 70,
+                    }
+                },
+                {
+                    selector: '#radar-x70',
+                    name: 'X70',
+                    metrics: {
+                        'Calidad-precio': 90,
+                        'Tecnología': 84,
+                        'Seguridad': 82,
+                        'Eficiencia': 77,
+                        'Postventa': 72,
+                    }
+                },
+                {
+                    selector: '#radar-dashing',
+                    name: 'Dashing',
+                    metrics: {
+                        'Calidad-precio': 87,
+                        'Tecnología': 90,
+                        'Seguridad': 82,
+                        'Eficiencia': 76,
+                        'Postventa': 70,
+                    }
+                },
+                {
+                    selector: '#radar-t2',
+                    name: 'T2',
+                    metrics: {
+                        'Calidad-precio': 91,
+                        'Tecnología': 88,
+                        'Seguridad': 85,
+                        'Eficiencia': 78,
+                        'Postventa': 74,
+                    }
+                }
+            ];
+
+            radarConfigs.forEach(function (config) {
+                var categories = shuffleArray(Object.keys(config.metrics));
+                var data = categories.map(function (key) { return config.metrics[key]; });
+                initChart(config.selector, {
+                    tooltip: { trigger: 'item' },
+                    radar: {
+                        radius: '65%',
+                        indicator: categories.map(function (category) {
+                            return { name: category, max: 100 };
+                        }),
+                        splitArea: { areaStyle: { color: ['#eef1f5', '#ffffff'] } },
+                        axisName: { color: '#546175' },
+                        splitLine: { lineStyle: { color: '#d8dee6' } }
+                    },
+                    series: [{
+                        type: 'radar',
+                        data: [{
+                            value: data,
+                            name: config.name,
+                            itemStyle: { color: '#000000' },
+                            lineStyle: { color: '#000000' },
+                            areaStyle: { color: 'rgba(0, 0, 0, 0.16)' }
+                        }]
+                    }]
+                });
+            });
+        }
+
+        function buildBrandLegend(data, chart) {
+            var container = document.getElementById('market-share-marcas-legend');
+            if (!container) {
+                return;
+            }
+            container.innerHTML = '';
+            var total = data.reduce(function (acc, item) { return acc + item.value; }, 0);
+            data.forEach(function (item, index) {
+                var legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.setAttribute('role', 'button');
+                legendItem.setAttribute('aria-pressed', 'false');
+                legendItem.tabIndex = 0;
+                legendItem.dataset.index = index;
+
+                if (item.logo) {
+                    var logo = document.createElement('img');
+                    logo.src = item.logo;
+                    logo.alt = 'Logo ' + item.name;
+                    logo.loading = 'lazy';
+                    legendItem.appendChild(logo);
+                }
+
+                var swatch = document.createElement('span');
+                swatch.className = 'legend-swatch';
+                swatch.style.backgroundColor = item.color;
+                legendItem.appendChild(swatch);
+
+                var wrapper = document.createElement('div');
+                var name = document.createElement('span');
+                name.textContent = item.name;
+                wrapper.appendChild(name);
+
+                var detail = document.createElement('small');
+                var percent = total ? ((item.value / total) * 100).toFixed(1) : '0.0';
+                detail.textContent = numberFormatter(item.value) + ' • ' + percent + '%';
+                wrapper.appendChild(detail);
+                legendItem.appendChild(wrapper);
+                container.appendChild(legendItem);
+
+                var activate = function () {
+                    setBrandHighlight(index, chart);
+                };
+
+                legendItem.addEventListener('click', activate);
+                legendItem.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        activate();
+                    }
+                });
+            });
+        }
+
+        function setBrandHighlight(index, chart) {
+            var container = document.getElementById('market-share-marcas-legend');
+            if (!container) {
+                return;
+            }
+            var items = container.querySelectorAll('.legend-item');
+            if (brandLegendState.activeIndex === index) {
+                brandLegendState.activeIndex = null;
+                items.forEach(function (item) {
+                    item.classList.remove('is-active');
+                    item.setAttribute('aria-pressed', 'false');
+                });
+                chart.dispatchAction({ type: 'downplay', seriesIndex: 0 });
+                chart.dispatchAction({ type: 'hideTip' });
+                return;
+            }
+            brandLegendState.activeIndex = index;
+            items.forEach(function (item, idx) {
+                if (idx === index) {
+                    item.classList.add('is-active');
+                    item.setAttribute('aria-pressed', 'true');
+                } else {
+                    item.classList.remove('is-active');
+                    item.setAttribute('aria-pressed', 'false');
+                }
+            });
+            chart.dispatchAction({ type: 'downplay', seriesIndex: 0 });
+            chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: index });
+            chart.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index });
+        }
+
+        function buildGroupLegend(series, recentTotals) {
+            var container = document.getElementById('market-share-grupos-legend');
+            if (!container) {
+                return;
+            }
+            container.innerHTML = '';
+            series.forEach(function (serie, index) {
+                var legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.setAttribute('role', 'button');
+                legendItem.setAttribute('aria-pressed', 'false');
+                legendItem.tabIndex = 0;
+                legendItem.dataset.index = index;
+
+                if (serie.logo) {
+                    var logo = document.createElement('img');
+                    logo.src = serie.logo;
+                    logo.alt = 'Logo ' + serie.name;
+                    logo.loading = 'lazy';
+                    legendItem.appendChild(logo);
+                }
+
+                var swatch = document.createElement('span');
+                swatch.className = 'legend-swatch';
+                swatch.style.backgroundColor = serie.color;
+                legendItem.appendChild(swatch);
+
+                var wrapper = document.createElement('div');
+                var name = document.createElement('span');
+                name.textContent = serie.name;
+                wrapper.appendChild(name);
+
+                var detail = document.createElement('small');
+                var cumulative = serie.data.reduce(function (acc, value) { return acc + value; }, 0);
+                var shareRecent = cumulative ? ((recentTotals[index] / cumulative) * 100).toFixed(1) : '0.0';
+                detail.textContent = numberFormatter(cumulative) + ' • ' + shareRecent + '% últimos 3 años';
+                wrapper.appendChild(detail);
+                legendItem.appendChild(wrapper);
+                container.appendChild(legendItem);
+
+                var activate = function () {
+                    setGroupHighlight(index);
+                };
+
+                legendItem.addEventListener('click', activate);
+                legendItem.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        activate();
+                    }
+                });
+            });
+        }
+
+        function setGroupHighlight(index) {
+            var container = document.getElementById('market-share-grupos-legend');
+            if (!container) {
+                return;
+            }
+            var items = container.querySelectorAll('.legend-item');
+            if (groupLegendState.activeIndex === index) {
+                groupLegendState.activeIndex = null;
+                items.forEach(function (item) {
+                    item.classList.remove('is-active');
+                    item.setAttribute('aria-pressed', 'false');
+                });
+                if (groupCharts.history) {
+                    groupCharts.history.setOption({
+                        series: groupCharts.history.getOption().series.map(function (serie) {
+                            return { id: serie.id, lineStyle: { opacity: 1, width: 2 }, itemStyle: { opacity: 1 } };
+                        })
+                    });
+                    groupCharts.history.dispatchAction({ type: 'downplay' });
+                }
+                if (groupCharts.recent) {
+                    groupCharts.recent.dispatchAction({ type: 'downplay' });
+                }
+                return;
+            }
+            groupLegendState.activeIndex = index;
+            items.forEach(function (item, idx) {
+                if (idx === index) {
+                    item.classList.add('is-active');
+                    item.setAttribute('aria-pressed', 'true');
+                } else {
+                    item.classList.remove('is-active');
+                    item.setAttribute('aria-pressed', 'false');
+                }
+            });
+            if (groupCharts.history) {
+                groupCharts.history.setOption({
+                    series: groupCharts.history.getOption().series.map(function (serie, idx) {
+                        return {
+                            id: serie.id,
+                            lineStyle: { opacity: idx === index ? 1 : 0.25, width: idx === index ? 3 : 2 },
+                            itemStyle: { opacity: idx === index ? 1 : 0.25 }
+                        };
+                    })
+                });
+                groupCharts.history.dispatchAction({ type: 'downplay' });
+                groupCharts.history.dispatchAction({ type: 'highlight', seriesIndex: index });
+            }
+            if (groupCharts.recent) {
+                groupCharts.recent.dispatchAction({ type: 'downplay' });
+                groupCharts.recent.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: index });
+                groupCharts.recent.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index });
+            }
+        }
+
+        function setupGroupToggle() {
+            var buttons = document.querySelectorAll('.dashboard-actions [data-target-mode]');
+            if (!buttons.length) {
+                return;
+            }
+            var historyContainer = document.getElementById('market-share-grupos');
+            var recentContainer = document.getElementById('market-share-grupos-recent');
+            buttons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    buttons.forEach(function (other) { other.classList.remove('is-active'); });
+                    button.classList.add('is-active');
+                    var mode = button.dataset.targetMode;
+                    if (mode === 'recent') {
+                        historyContainer.classList.add('is-hidden');
+                        recentContainer.classList.remove('is-hidden');
+                        if (groupCharts.recent) { groupCharts.recent.resize(); }
+                    } else {
+                        recentContainer.classList.add('is-hidden');
+                        historyContainer.classList.remove('is-hidden');
+                        if (groupCharts.history) { groupCharts.history.resize(); }
+                    }
+                });
+            });
+        }
+
+        function shuffleDetailBlocks() {
+            document.querySelectorAll('.detail-grid').forEach(function (grid) {
+                var blocks = shuffleArray(grid.querySelectorAll('.detail-block'));
+                var fragment = document.createDocumentFragment();
+                blocks.forEach(function (block) { fragment.appendChild(block); });
+                grid.appendChild(fragment);
+            });
+        }
+
+        function setupRevealAnimations() {
+            var elements = Array.prototype.slice.call(document.querySelectorAll('.card, .dashboard, .kpi-card, .detail-block'));
+            if (!elements.length) {
+                return;
+            }
+            elements.forEach(function (element, index) {
+                element.classList.add('revealable');
+                element.style.transitionDelay = (index % 6) * 40 + 'ms';
+            });
+
+            if (typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                elements.forEach(function (element) {
+                    element.classList.add('is-visible');
+                });
+                return;
+            }
+
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+            elements.forEach(function (element) {
+                observer.observe(element);
+            });
+        }
+
+        function setupCounters() {
+            var counters = Array.prototype.slice.call(document.querySelectorAll('.kpi-value[data-target]'));
+            if (!counters.length) {
+                return;
+            }
+            var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function formatCounterValue(value, decimals) {
+                if (decimals === 0) {
+                    return numberFormatter(Math.round(value));
+                }
+                return value.toFixed(decimals);
+            }
+
+            function animateCounter(element) {
+                var target = parseFloat(element.dataset.target);
+                if (isNaN(target)) {
+                    return;
+                }
+                var decimals = parseInt(element.dataset.decimals || '0', 10);
+                var prefix = element.dataset.prefix || '';
+                var suffix = element.dataset.suffix || '';
+                if (prefersReducedMotion) {
+                    element.textContent = prefix + formatCounterValue(target, decimals) + suffix;
+                    return;
+                }
+                var duration = 1600;
+                var startTimestamp = null;
+                function easeOutCubic(t) {
+                    return 1 - Math.pow(1 - t, 3);
+                }
+                function step(timestamp) {
+                    if (!startTimestamp) {
+                        startTimestamp = timestamp;
+                    }
+                    var progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    var value = easeOutCubic(progress) * target;
+                    element.textContent = prefix + formatCounterValue(value, decimals) + suffix;
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                }
+                window.requestAnimationFrame(step);
+            }
+
+            if (typeof IntersectionObserver === 'undefined' || prefersReducedMotion) {
+                counters.forEach(animateCounter);
+                return;
+            }
+
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.6 });
+
+            counters.forEach(function (counter) {
+                observer.observe(counter);
+            });
+        }
+
+        function setupHeaderScrollHide() {
+            var header = document.querySelector('header');
+            if (!header) {
+                return;
+            }
+            var lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
+            var threshold = 10;
+
+            window.addEventListener('scroll', function () {
+                var current = window.pageYOffset || document.documentElement.scrollTop;
+                if (current <= 0) {
+                    header.classList.remove('is-hidden');
+                } else if (current > lastScrollY + threshold) {
+                    header.classList.add('is-hidden');
+                } else if (current < lastScrollY - threshold) {
+                    header.classList.remove('is-hidden');
+                }
+                lastScrollY = current;
+            }, { passive: true });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            buildCharts();
+            setupTrendToggles();
+            setupGroupToggle();
+            shuffleDetailBlocks();
+            setupRevealAnimations();
+            setupCounters();
+            setupHeaderScrollHide();
+            initActivationMap();
+        });
+
+        function initActivationMap() {
+            var mapContainer = document.getElementById('activations-map');
+            if (!mapContainer || typeof L === 'undefined') {
+                return;
+            }
+
+            var sczCenter = [-17.783493, -63.182118];
+            var map = L.map(mapContainer, {
+                zoomControl: true,
+                scrollWheelZoom: false
+            }).setView(sczCenter, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var activations = [
+                {
+                    name: 'Cambódromo',
+                    coords: [-17.753896, -63.150212],
+                    detail: 'Feria de experiencia Jetour — 12 de octubre'
+                },
+                {
+                    name: 'Ventura Mall',
+                    coords: [-17.75598, -63.19081],
+                    detail: 'Test drives urbanos — 18 al 20 de octubre'
+                },
+                {
+                    name: 'Av. Cristo Redentor',
+                    coords: [-17.761548, -63.179517],
+                    detail: 'Roadshow nocturno — 26 de octubre'
+                },
+                {
+                    name: 'Equipetrol',
+                    coords: [-17.770722, -63.190181],
+                    detail: 'Networking con flotas corporativas — 7 de noviembre'
+                }
+            ];
+
+            activations.forEach(function (point) {
+                L.marker(point.coords).addTo(map).bindPopup('<strong>' + point.name + '</strong><br>' + point.detail);
+            });
+
+            setTimeout(function () {
+                map.invalidateSize();
+            }, 120);
+
+            window.addEventListener('resize', function () {
+                map.invalidateSize();
+            });
+        }
+    </script>
+
+</body>
+
+</html>
